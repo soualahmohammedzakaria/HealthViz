@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login - HealthViz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" type="image/png" href="assets/healthviz_icon.png" />
+</head>
+<body class="auth">
+  <main class="auth-card" aria-label="Login">
+    <div class="auth-header">
+      <img src="assets/healthviz.png" alt="Healthcare logo" class="app-logo" style="width: 200px; height: auto;"/>
+      <h1 class="app-title">Healthcare Analytics Dashboard</h1>
+    </div>
+
+    <form id="login-form" class="form" autocomplete="on">
+      <div class="form-row">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" required placeholder="me_etudiant@esi.dz" />
+      </div>
+      <div class="form-row">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" required placeholder="••••••••" />
+      </div>
+      <div class="form-actions">
+        <button class="btn" type="submit">Login</button>
+      </div>
+    </form>
+    <p class="panel__hint" style="margin-top:10px;">Any email/password will log you in for this demo.</p>
+  </main>
+
+  <script>
+    // Simple demo auth: anything passes
+    const form = document.getElementById('login-form');
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      try {
+        localStorage.setItem('auth', 'true');
+      } catch (_) {}
+      window.location.href = 'index.html';
+    });
+  </script>
+</body>
+</html>

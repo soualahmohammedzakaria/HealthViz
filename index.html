@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>Dashboard - HealthViz</title>
+  <meta name="description" content="Interactive healthcare analytics dashboard with D3.js and ArcGIS." />
+  <script>try{if(!localStorage.getItem('auth')){window.location.href='login.html';}}catch(e){}</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="assets/healthviz_icon.png" />
+
+  <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.css" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+
+<body>
+  <!-- Loading screen -->
+  <div id="loader-overlay" class="loader-overlay">
+    <div class="loader-container">
+      <img src="assets/healthviz.png" alt="Healthcare logo" class="loader-logo" style="width: 160px; height: auto;" />
+      <div class="loader-spinner"></div>
+      <p class="loader-text" id="loader-text">Gathering data...</p>
+    </div>
+  </div>
+
+  <header class="topbar">
+    <div class="topbar__inner">
+      <div class="brand">
+        <img src="assets/healthviz.png" alt="Healthcare logo" class="app-logo" />
+      </div>
+
+      <div class="search-bar">
+        <input type="text" id="search-input" class="search-bar__input" placeholder="Search graphs, data, anything..." />
+        <button class="search-bar__btn-filter btn-icon" id="btn-filter-toggle" aria-label="Toggle filters" title="Toggle filters">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="topbar__meta">
+        <div class="meta-pill" id="meta-records">Records: <span class="meta-pill__value">—</span></div>
+        <div class="meta-pill" id="meta-selection">Selection: <span class="meta-pill__value">All</span></div>
+        <button class="btn-icon logout-btn" id="btn-logout" aria-label="Logout" title="Logout">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="panel panel--filters hidden" id="filters-panel" aria-label="Filters">
+      <div class="panel__section">
+        <h2 class="panel__title">Filters</h2>
+        <p class="panel__hint">
+          The charts and map are linked. Selecting a hospital or a chart segment will update everything else.
+        </p>
+
+        <div class="form-row">
+          <label for="filter-test-result">Test results</label>
+          <select id="filter-test-result">
+            <option value="all">All</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label for="filter-age">Age group</label>
+          <select id="filter-age">
+            <option value="all">All</option>
+            <option value="0–18">0–18</option>
+            <option value="19–40">19–40</option>
+            <option value="41–65">41–65</option>
+            <option value="65+">65+</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label for="filter-blood-type">Blood type</label>
+          <select id="filter-blood-type">
+            <option value="all">All</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label for="filter-gender">Gender</label>
+          <select id="filter-gender">
+            <option value="all">All</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label for="filter-admission">Admission type</label>
+          <select id="filter-admission">
+            <option value="all">All</option>
+          </select>
+        </div>
+
+        <div class="form-row form-row--inline form-row--span2">
+          <label>Admission date range</label>
+          <input id="filter-date-from" type="date" />
+          <input id="filter-date-to" type="date" />
+        </div>
+
+        <div class="form-row">
+          <label for="filter-condition">Medical condition</label>
+          <select id="filter-condition">
+            <option value="all">All</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label for="filter-insurance">Insurance provider</label>
+          <select id="filter-insurance">
+            <option value="all">All</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label for="filter-len-max">Max. length of stay (days)</label>
+          <input id="filter-len-max" type="number" min="0" step="1" placeholder="e.g. 14" />
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn--secondary" id="btn-reset" type="button">Reset selection</button>
+          <button class="btn" id="btn-confirm" type="button">Confirm selection</button>
+        </div>
+
+        <div class="panel__divider"></div>
+
+        <h3 class="panel__subtitle">What counts as “influential” here?</h3>
+        <p class="panel__text">
+          I treat <strong>Test Results</strong> as a multi-class target (<em>Normal</em>, <em>Abnormal</em>, <em>Inconclusive</em>). The dashboard focuses on
+          variables that could plausibly influence outcomes (or reflect underlying severity):
+        </p>
+        <ul class="panel__list">
+          <li><strong>Age / Gender</strong> (risk differences, access patterns)</li>
+          <li><strong>Medical condition</strong> (different baseline expectations)</li>
+          <li><strong>Admission type</strong> (urgency and care pathway)</li>
+          <li><strong>Length of stay</strong> (proxy for complexity; derived from dates)</li>
+          <li><strong>Billing amount</strong> (cost intensity; also impacted by insurance/provider effects)</li>
+        </ul>
+
+        <div class="panel__divider"></div>
+
+        <h3 class="panel__subtitle">Biases & limitations (dataset)</h3>
+        <p class="panel__text" id="biases-text">
+          This dataset is synthetic/curated and may not reflect a real hospital system. Geographic locations are approximated in this project (no exact
+          hospital coordinates are provided). Test Results can also be influenced by testing protocols, not just patient condition.
+        </p>
+      </div>
+    </aside>
+
+    <section class="dashboard" aria-label="Dashboard">
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+          </div>
+          <div class="kpi-card__content">
+            <div class="kpi-card__label">Total Patients</div>
+            <div class="kpi-card__value" id="kpi-total-patients">—</div>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23"></line>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+          </div>
+          <div class="kpi-card__content">
+            <div class="kpi-card__label">Total Revenue</div>
+            <div class="kpi-card__value" id="kpi-total-revenue">—</div>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+              <line x1="1" y1="10" x2="23" y2="10"></line>
+            </svg>
+          </div>
+          <div class="kpi-card__content">
+            <div class="kpi-card__label">Avg Billing</div>
+            <div class="kpi-card__value" id="kpi-avg-billing">—</div>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          <div class="kpi-card__content">
+            <div class="kpi-card__label">Avg Length of Stay</div>
+            <div class="kpi-card__value" id="kpi-avg-los">—</div>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+              <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+          </div>
+          <div class="kpi-card__content">
+            <div class="kpi-card__label">Hospitals</div>
+            <div class="kpi-card__value" id="kpi-hospitals">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <section class="card" aria-label="Test Result Distribution">
+          <div class="card__header">
+            <h2 class="card__title">Test Results Distribution</h2>
+            <p class="card__subtitle">Overall outcome frequency</p>
+          </div>
+          <div class="card__body">
+            <div class="viz" id="chart-test-results"></div>
+          </div>
+        </section>
+
+        <section class="card" aria-label="Conditions vs Test Results">
+          <div class="card__header">
+            <h2 class="card__title">Medical Conditions vs Test Results</h2>
+            <p class="card__subtitle">Outcome mix by condition</p>
+          </div>
+          <div class="card__body">
+            <div class="viz" id="chart-conditions"></div>
+          </div>
+        </section>
+
+        <section class="card" aria-label="Billing Amount">
+          <div class="card__header">
+            <h2 class="card__title">Billing Amount Analysis</h2>
+            <p class="card__subtitle">Cost distribution and outliers</p>
+          </div>
+          <div class="card__body">
+            <div class="viz" id="chart-billing"></div>
+          </div>
+        </section>
+
+        <section class="card" aria-label="Demographics">
+          <div class="card__header">
+            <h2 class="card__title">Patient Demographics</h2>
+            <p class="card__subtitle">Age groups split by gender</p>
+          </div>
+          <div class="card__body">
+            <div class="viz" id="chart-demographics"></div>
+          </div>
+        </section>
+
+        <section class="card card--wide" aria-label="Map">
+          <div class="card__header">
+            <h2 class="card__title">Hospital Map</h2>
+            <p class="card__subtitle">Hospitals and locations with details</p>
+          </div>
+          <div class="card__body card__body--map">
+            <div id="map" class="map"></div>
+          </div>
+        </section>
+
+        <section class="card card--wide" aria-label="Patient Flow">
+          <div class="card__header">
+            <h2 class="card__title">Patient Flow Overview</h2>
+            <p class="card__subtitle">Admission type to test results flow</p>
+          </div>
+          <div class="card__body">
+            <div class="viz" id="chart-sankey"></div>
+          </div>
+        </section>
+
+        <section class="card" aria-label="Insurance Cost">
+          <div class="card__header">
+            <h2 class="card__title">Average Cost per Insurance Provider</h2>
+            <p class="card__subtitle">Cost comparison across providers</p>
+          </div>
+          <div class="card__body">
+            <div class="viz" id="chart-insurance-cost"></div>
+          </div>
+        </section>
+
+        <section class="card" aria-label="Blood Type Revenue">
+          <div class="card__header">
+            <h2 class="card__title">Total Revenue by Blood Type</h2>
+            <p class="card__subtitle">Revenue distribution across blood types</p>
+          </div>
+          <div class="card__body">
+            <div class="viz" id="chart-blood-revenue"></div>
+          </div>
+        </section>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer__inner">
+      <div class="footer__title">HealthViz - Healthcare Analytics Dashboard</div>
+      <div class="footer__credits">
+        <span>Soualah Mohammed Zakaria<a href="mailto:mz_soualahmohammed@esi.dz">(mz_soualahmohammed@esi.dz)</a></span>
+        <span>Aouni Nazim Abderhmane<a href="mailto:mn_aouni@esi.dz">(mn_aouni@esi.dz)</a></span>
+        <span>Moussous Billel<a href="mailto:mb_moussous@esi.dz">(mb_moussous@esi.dz)</a></span>
+      </div>
+      <div class="footer__copy">© 2026. All rights reserved.</div>
+    </div>
+  </footer>
+
+  <!-- Shared tooltip for D3 charts -->
+  <div id="tooltip" class="tooltip" role="status" aria-hidden="true"></div>
+
+  <!-- Libraries -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
+  <script src="https://js.arcgis.com/4.29/"></script>
+  <script src="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.js.iife.js"></script>
+
+  <!-- App code (order matters; keep it simple for now) -->
+  <script src="js/state.js"></script>
+  <script src="js/utils/format.js"></script>
+  <script src="js/utils/tooltip.js"></script>
+  <script src="js/utils/stats.js"></script>
+  <script src="js/utils/geo.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/charts/testResults.js"></script>
+  <script src="js/charts/conditions.js"></script>
+  <script src="js/charts/billing.js"></script>
+  <script src="js/charts/demographics.js"></script>
+  <script src="js/charts/patientFlow.js"></script>
+  <script src="js/charts/insuranceCost.js"></script>
+  <script src="js/charts/bloodRevenue.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    // Initialize loader with messages
+    (function() {
+      var loaderMessages = [
+        'Gathering data...',
+        'Calculating aggregated values...',
+        'Optimizing dashboard...',
+        'Finalizing...'
+      ];
+      var messageIndex = 0;
+      var loaderTextEl = document.getElementById('loader-text');
+      var loaderOverlay = document.getElementById('loader-overlay');
+
+      // Change message every 500ms
+      var messageInterval = setInterval(function() {
+        if(messageIndex < loaderMessages.length) {
+          loaderTextEl.textContent = loaderMessages[messageIndex];
+          messageIndex++;
+        }
+      }, 500);
+
+      // Hide loader when page is fully loaded
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          clearInterval(messageInterval);
+          loaderOverlay.classList.add('hidden');
+          setTimeout(function() {
+            loaderOverlay.style.display = 'none';
+          }, 500);
+        }, 300);
+      });
+    })();
+  </script>
+  <script>
+    (function(){
+      // Logout handler
+      var btn = document.getElementById('btn-logout');
+      if(btn){
+        btn.addEventListener('click', function(){
+          try{ localStorage.removeItem('auth'); }catch(e){}
+          window.location.href = 'login.html';
+        });
+      }
+
+      // Filter toggle
+      var filterToggleBtn = document.getElementById('btn-filter-toggle');
+      var filtersPanel = document.getElementById('filters-panel');
+      if(filterToggleBtn && filtersPanel){
+        filterToggleBtn.addEventListener('click', function(){
+          filtersPanel.classList.toggle('hidden');
+        });
+      }
+
+      // Search functionality
+      var searchInput = document.getElementById('search-input');
+      if(searchInput){
+        searchInput.addEventListener('keydown', function(e){
+          if(e.key !== 'Enter') return;
+          var query = searchInput.value.toLowerCase().trim();
+          if(!query) return;
+
+          // Expanded keyword map with more variations and synonyms
+          var searchMap = [
+            { keywords: ['map', 'hospital', 'location', 'geographic'], id: 'map' },
+            { keywords: ['test result', 'test', 'results', 'distribution', 'outcome', 'normal', 'abnormal', 'inconclusive'], id: 'chart-test-results' },
+            { keywords: ['condition', 'medical', 'conditions', 'diagnosis', 'illness'], id: 'chart-conditions' },
+            { keywords: ['billing', 'cost', 'amount', 'price', 'expense', 'charges', 'bill', 'insurance', 'provider'], id: 'chart-insurance-cost' },
+            { keywords: ['demographics', 'age', 'gender', 'population', 'profile'], id: 'chart-demographics' },
+            { keywords: ['patient flow', 'sankey', 'flow', 'admission', 'path', 'journey', 'admission type'], id: 'chart-sankey' },
+            { keywords: ['blood', 'blood type', 'revenue', 'total revenue'], id: 'chart-blood-revenue' }
+          ];
+
+          var matchedId = null;
+          var bestScore = 0;
+
+          // Find best match by checking which keywords match the query (prefix or substring)
+          for(var i = 0; i < searchMap.length; i++){
+            var entry = searchMap[i];
+            for(var j = 0; j < entry.keywords.length; j++){
+              var keyword = entry.keywords[j];
+              // Check if keyword starts with query (prefix match) or query is in keyword
+              if(keyword.indexOf(query) !== -1){
+                var score = keyword.length; // Longer keyword matches score higher
+                if(score > bestScore){
+                  bestScore = score;
+                  matchedId = entry.id;
+                }
+              }
+            }
+          }
+
+          if(matchedId){
+            var elem = document.getElementById(matchedId);
+            if(elem){
+              elem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              // Optional: highlight the matched card
+              var card = elem.closest('.card');
+              if(card){
+                card.style.boxShadow = '0 0 0 2px var(--accent)';
+                setTimeout(function(){ card.style.boxShadow = ''; }, 2000);
+              }
+            }
+          }
+          searchInput.value = '';
+        });
+      }
+
+      // Driver.js Tutorial for first-time users
+      function startTutorial() {
+        console.log('startTutorial called');
+        console.log('driver available:', typeof driver);
+        console.log('driver keys:', Object.keys(driver));
+        console.log('tutorial_completed:', localStorage.getItem('tutorial_completed'));
+        
+        if(typeof driver === 'undefined') {
+          console.error('Driver.js not loaded');
+          return;
+        }
+        
+        if(localStorage.getItem('tutorial_completed')) {
+          console.log('Tutorial already completed');
+          return;
+        }
+
+        try {
+          // driver.js v1.3.1 - explore the API
+          console.log('driver.js:', driver.js);
+          console.log('driver.js keys:', Object.keys(driver.js));
+          
+          // The IIFE exports driver.js.driver as a function
+          const driverFunc = driver.js.driver;
+          console.log('driverFunc type:', typeof driverFunc);
+          
+          const filtersPanel = document.getElementById('filters-panel');
+          
+          const driverObj = driverFunc({
+            showProgress: true,
+            showButtons: ['next', 'previous', 'close'],
+            onHighlightStarted: function(element, step, options) {
+              // Open filters panel when reaching the filters step
+              if(step && step.element === '#filters-panel' && filtersPanel) {
+                filtersPanel.classList.remove('hidden');
+              }
+              // Also open for confirm button step
+              if(step && step.element === '#btn-confirm' && filtersPanel) {
+                filtersPanel.classList.remove('hidden');
+              }
+            },
+            onDeselected: function(element, step, options) {
+              // Close filters panel after the confirm button step
+              if(step && step.element === '#btn-confirm' && filtersPanel) {
+                filtersPanel.classList.add('hidden');
+              }
+            },
+            steps: [
+              {
+                element: '.brand',
+                popover: {
+                  title: 'Welcome to HealthViz! 👋',
+                  description: 'This interactive healthcare analytics dashboard helps you explore patient data, billing insights, and hospital metrics. Let\'s take a quick tour!',
+                  side: 'bottom',
+                  align: 'start'
+                }
+              },
+              {
+                element: '.kpi-grid',
+                popover: {
+                  title: 'Key Performance Indicators',
+                  description: 'Get a quick overview of total patients, revenue, average billing, length of stay, and number of hospitals in your filtered data.',
+                  side: 'bottom',
+                  align: 'start'
+                }
+              },
+              {
+                element: '#btn-filter-toggle',
+                popover: {
+                  title: 'Filter Toggle',
+                  description: 'Click this icon to show or hide the filter panel. Use filters to narrow down your data by age, gender, admission type, and more.',
+                  side: 'bottom',
+                  align: 'start'
+                }
+              },
+              {
+                element: '#search-input',
+                popover: {
+                  title: 'Quick Search',
+                  description: 'Type keywords like "blood", "demo", "billing" and press Enter to quickly jump to specific charts.',
+                  side: 'bottom',
+                  align: 'start'
+                }
+              },
+              {
+                element: '#filters-panel',
+                popover: {
+                  title: 'Advanced Filters',
+                  description: 'Adjust multiple filters to explore specific patient segments. Changes are staged here and applied only when you click "Confirm selection".',
+                  side: 'right',
+                  align: 'start'
+                }
+              },
+              {
+                element: '#btn-confirm',
+                popover: {
+                  title: 'Confirm Selection',
+                  description: 'After adjusting filters, click this button to apply them to all charts and the map.',
+                  side: 'top',
+                  align: 'start'
+                }
+              },
+              {
+                element: '#chart-test-results',
+                popover: {
+                  title: 'Test Results Distribution',
+                  description: 'View the distribution of patient test outcomes (Normal, Abnormal, Inconclusive). Click segments to filter by specific results.',
+                  side: 'top',
+                  align: 'start'
+                }
+              },
+              {
+                element: '#chart-conditions',
+                popover: {
+                  title: 'Medical Conditions vs Test Results',
+                  description: 'Compare how different medical conditions correlate with test outcomes. Useful for identifying condition-specific patterns.',
+                  side: 'top',
+                  align: 'start'
+                }
+              },
+              {
+                element: '#chart-billing',
+                popover: {
+                  title: 'Billing Amount Analysis',
+                  description: 'Explore cost distribution and identify billing outliers. Drag to select a billing range to filter patients by cost.',
+                  side: 'top',
+                  align: 'start'
+                }
+              },
+              {
+                element: '#chart-demographics',
+                popover: {
+                  title: 'Patient Demographics',
+                  description: 'Visualize patient distribution by age groups and gender. Click bars to filter by specific demographics.',
+                  side: 'top',
+                  align: 'start'
+                }
+              },
+              {
+                element: '#map',
+                popover: {
+                  title: 'Interactive Hospital Map',
+                  description: 'Click on hospital markers to filter the entire dashboard by that specific hospital. The map shows patient distribution across locations.',
+                  side: 'top',
+                  align: 'start'
+                }
+              },
+              {
+                element: '#chart-sankey',
+                popover: {
+                  title: 'Patient Flow Overview',
+                  description: 'Track how patients flow from admission types through to test results. The width of flows represents patient volume.',
+                  side: 'top',
+                  align: 'start'
+                }
+              },
+              {
+                element: '#chart-insurance-cost',
+                popover: {
+                  title: 'Average Cost per Insurance Provider',
+                  description: 'Compare average billing amounts across different insurance providers to identify cost variations.',
+                  side: 'top',
+                  align: 'start'
+                }
+              },
+              {
+                element: '#chart-blood-revenue',
+                popover: {
+                  title: 'Revenue by Blood Type',
+                  description: 'Analyze total revenue contribution by patient blood type. Useful for resource planning and inventory management.',
+                  side: 'top',
+                  align: 'start'
+                }
+              },
+              {
+                popover: {
+                  title: 'You\'re All Set! 🎉',
+                  description: 'Explore the charts below, apply filters, and discover insights in your healthcare data. You can restart this tour anytime from the settings.',
+                  side: 'bottom',
+                  align: 'start'
+                }
+              }
+            ],
+            onDestroyStarted: function(){
+              localStorage.setItem('tutorial_completed', 'true');
+              // Close filters panel when tour ends
+              if(filtersPanel) filtersPanel.classList.add('hidden');
+              if(driverObj && driverObj.destroy) driverObj.destroy();
+            }
+          });
+          
+          console.log('Driver object created:', driverObj);
+          console.log('Starting driver tour...');
+          driverObj.drive();
+        } catch(error) {
+          console.error('Error starting tutorial:', error);
+        }
+      }
+
+      // Wait for page to fully load before starting tutorial
+      console.log('Setting up tutorial initialization...');
+      if(document.readyState === 'complete') {
+        console.log('Page already loaded, starting tutorial in 2 seconds');
+        setTimeout(startTutorial, 2000);
+      } else {
+        console.log('Waiting for page load...');
+        window.addEventListener('load', function() {
+          console.log('Page loaded, starting tutorial in 2 seconds');
+          setTimeout(startTutorial, 2000);
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
