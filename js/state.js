@@ -17,32 +17,16 @@
   }
 
   // Compute base path for GitHub Pages compatibility
-  // This handles both root deployment and subdirectory deployment (e.g., /HealthViz/)
-  function getBasePath() {
-    const scripts = document.getElementsByTagName('script');
-    for (let i = 0; i < scripts.length; i++) {
-      const src = scripts[i].src;
-      if (src && src.includes('state.js')) {
-        // Extract base path from script src (remove /js/state.js)
-        return src.replace(/js\/state\.js.*$/, '');
-      }
-    }
-    // Fallback: use current page location
-    const path = window.location.pathname;
-    const lastSlash = path.lastIndexOf('/');
-    if (lastSlash > 0) {
-      return window.location.origin + path.substring(0, lastSlash + 1);
-    }
-    return window.location.origin + '/';
+  // Uses relative path which works for both local and deployed environments
+  function getDataPath() {
+    // Simple relative path - works universally
+    return './data/healthcare_dataset.csv';
   }
-
-  const basePath = getBasePath();
 
   window.App = {
     version: '0.1',
     config: {
-      basePath: basePath,
-      dataPath: basePath + 'data/healthcare_dataset.csv',
+      dataPath: getDataPath(),
       palette: {
         Normal: '#2a6f97',
         Abnormal: '#b23a48',

@@ -35,8 +35,10 @@
   function safeUpdate(moduleName, rows) {
     const mod = window.App.chartModules?.[moduleName];
     if (!mod) return;
+    // Guard against null/undefined rows - pass empty array instead
+    const safeRows = rows || [];
     try {
-      mod.update(rows);
+      mod.update(safeRows);
     } catch (e) {
       console.error(`Error updating chart ${moduleName}:`, e);
     }

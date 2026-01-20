@@ -67,6 +67,21 @@
     if (!root || !root.__chart) return;
 
     const { svg } = root.__chart;
+    const g = svg.select('.plot');
+
+    // Handle empty data gracefully
+    if (!rows || rows.length === 0) {
+      g.selectAll('*').remove();
+      g.append('text')
+        .attr('x', (root.clientWidth || 920) / 2)
+        .attr('y', (root.clientHeight || 320) / 2)
+        .attr('text-anchor', 'middle')
+        .attr('fill', '#6b7280')
+        .attr('font-size', 14)
+        .text('No data available');
+      return;
+    }
+
     const { tooltip } = window.App.utils;
 
     const w = root.clientWidth || 920;
@@ -82,6 +97,19 @@
     const innerH = h - margin.top - margin.bottom;
 
     const graph = buildGraph(rows, 12);
+
+    // Guard against empty graph
+    if (!graph.nodes.length || !graph.links.length) {
+      g.selectAll('*').remove();
+      g.append('text')
+        .attr('x', innerW / 2)
+        .attr('y', innerH / 2)
+        .attr('text-anchor', 'middle')
+        .attr('fill', '#6b7280')
+        .attr('font-size', 14)
+        .text('Insufficient data for flow diagram');
+      return;
+    }
 
     const sankey = d3.sankey()
       .nodeWidth(14)
