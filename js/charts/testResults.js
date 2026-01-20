@@ -2,6 +2,11 @@
   if (!window.App) throw new Error('App state not initialized');
 
   const palette = window.App.config.palette;
+  const colors = {
+    'Normal': '#1f4e79',
+    'Abnormal': '#b23a48',
+    'Inconclusive': '#6b7280'
+  };
 
   function buildCounts(rows) {
     const keys = ['Normal', 'Abnormal', 'Inconclusive'];
@@ -22,8 +27,6 @@
       .attr('height', '100%');
 
     svg.append('g').attr('class', 'plot');
-    svg.append('g').attr('class', 'x-axis');
-    svg.append('g').attr('class', 'y-axis');
 
     svg.append('text')
       .attr('class', 'title')
@@ -33,34 +36,8 @@
       .attr('font-weight', 600)
       .text('Distribution of Test Results');
 
-    svg.append('text')
-      .attr('class', 'x-label')
-      .attr('text-anchor', 'middle')
-      .attr('font-size', 11)
-      .attr('fill', '#6b7280');
-
-    svg.append('text')
-      .attr('class', 'y-label')
-      .attr('text-anchor', 'middle')
-      .attr('font-size', 11)
-      .attr('fill', '#6b7280')
-      .attr('transform', 'rotate(-90)');
-
-    // Simple legend
+    // Legend
     const legend = svg.append('g').attr('class', 'legend');
-    const entries = ['Normal', 'Abnormal', 'Inconclusive'];
-    const legendItem = legend.selectAll('g').data(entries).enter().append('g');
-    legendItem.append('rect')
-      .attr('width', 10)
-      .attr('height', 10)
-      .attr('rx', 2)
-      .attr('fill', d => palette[d] || '#6b7280');
-    legendItem.append('text')
-      .attr('x', 14)
-      .attr('y', 9)
-      .attr('font-size', 11)
-      .attr('fill', '#374151')
-      .text(d => d);
 
     root.__chart = { svg, legend };
   }
@@ -74,75 +51,131 @@
 
     const w = root.clientWidth || 400;
     const h = root.clientHeight || 320;
-    const margin = { top: 28, right: 12, bottom: 36, left: 60 };
 
     svg.attr('viewBox', `0 0 ${w} ${h}`);
 
     const data = buildCounts(rows);
+    const total = d3.sum(data, d => d.value) || 1;
 
-    const x = d3.scaleBand()
-      .domain(data.map(d => d.key))
-      .range([margin.left, w - margin.right])
-      .padding(0.25);
+    // Donut chart dimensions
+    const radius = Math.min(w, h - 40) / 2 - 20;
+    const innerRadius = radius * 0.5;
+    const centerX = w / 2;
+    const centerY = (h + 20) / 2;
 
-    const y = d3.scaleLinear()
-      .domain([0, d3.max(data, d => d.value) || 1])
-      .nice()
-      .range([h - margin.bottom, margin.top + 10]);
+    const pie = d3.pie()
+      .value(d => d.value)
+      .sort(null)
+      .padAngle(0.02);
 
-    svg.select('.x-axis')
-      .attr('transform', `translate(0,${h - margin.bottom})`)
-      .call(d3.axisBottom(x));
+    const arc = d3.arc()
+      .innerRadius(innerRadius)
+      .outerRadius(radius)
+      .cornerRadius(4);
 
-    svg.select('.y-axis')
-      .attr('transform', `translate(${margin.left},0)`)
-      .call(d3.axisLeft(y).ticks(5));
+    const arcHover = d3.arc()
+      .innerRadius(innerRadius)
+      .outerRadius(radius + 8)
+      .cornerRadius(4);
 
-    svg.select('.x-label')
-      .attr('x', (margin.left + w - margin.right) / 2)
-      .attr('y', h - 6)
-      .text('Test Result');
+    const plotG = svg.select('.plot')
+      .attr('transform', `translate(${centerX},${centerY})`);
 
-    svg.select('.y-label')
-      .attr('x', -((margin.top + h - margin.bottom) / 2))
-      .attr('y', 12)
-      .text('Patient count');
-
-    // Legend layout
-    legend.attr('transform', `translate(${w - margin.right - 220}, ${8})`);
-    legend.selectAll('g')
-      .attr('transform', (d, i) => `translate(${i * 74}, 0)`);
+    const arcs = pie(data);
 
     const active = window.App.state.filters.testResult;
 
-    const bars = svg.select('.plot')
-      .selectAll('rect.bar')
+    // Bind data
+    const paths = plotG.selectAll('path.slice')
+      .data(arcs, d => d.data.key);
+
+    // Enter
+    paths.enter()
+      .append('path')
+      .attr('class', 'slice')
+      .attr('fill', d => colors[d.data.key] || '#6b7280')
+      .attr('stroke', '#fff')
+      .attr('stroke-width', 2)
+      .style('cursor', 'pointer')
+      .each(function(d) { this._current = d; })
+      .on('mouseenter', function(event, d) {
+        d3.select(this)
+          .transition().duration(150)
+          .attr('d', arcHover);
+      })
+      .on('mousemove', (event, d) => {
+        const pct = ((d.data.value / total) * 100).toFixed(1);
+        tooltip.show(
+          `<div style="font-weight:600;">${d.data.key}</div>` +
+          `<div>${d.data.value.toLocaleString()} patients (${pct}%)</div>`,
+          event.clientX, event.clientY
+        );
+      })
+      .on('mouseleave', function() {
+        d3.select(this)
+          .transition().duration(150)
+          .attr('d', arc);
+        tooltip.hide();
+      })
+      .merge(paths)
+      .attr('opacity', d => (active === 'all' || active === d.data.key) ? 1 : 0.35)
+      .transition()
+      .duration(400)
+      .attrTween('d', function(d) {
+        const interp = d3.interpolate(this._current, d);
+        this._current = interp(1);
+        return t => arc(interp(t));
+      });
+
+    paths.exit().remove();
+
+    // Center label showing total
+    let centerText = plotG.select('text.center-label');
+    if (centerText.empty()) {
+      centerText = plotG.append('text')
+        .attr('class', 'center-label')
+        .attr('text-anchor', 'middle')
+        .attr('dy', '0.35em')
+        .attr('font-size', 14)
+        .attr('font-weight', 600)
+        .attr('fill', '#374151');
+    }
+    centerText.text(`${total.toLocaleString()} total`);
+
+    // Legend
+    legend.attr('transform', `translate(${w - 130}, ${30})`);
+    
+    const legendItems = legend.selectAll('g.legend-item')
       .data(data, d => d.key);
 
-    bars.enter()
-      .append('rect')
-      .attr('class', 'bar')
-      .attr('x', d => x(d.key))
-      .attr('width', x.bandwidth())
-      .attr('y', y(0))
-      .attr('height', 0)
-      .attr('rx', 6)
-      .attr('fill', d => palette[d.key] || '#6b7280')
-      .style('cursor', 'default')
-      .on('mousemove', (event, d) => {
-        tooltip.show(`<div style="font-weight:600;">${d.key}</div><div>${d.value.toLocaleString()} patients</div>`, event.clientX, event.clientY);
-      })
-      .on('mouseleave', () => tooltip.hide())
-      .merge(bars)
-      .attr('opacity', d => (active === 'all' || active === d.key) ? 1 : 0.35)
-      .transition()
-      .duration(250)
-      .attr('x', d => x(d.key))
-      .attr('width', x.bandwidth())
-      .attr('y', d => y(d.value))
-      .attr('height', d => Math.max(0, y(0) - y(d.value)));
+    const legendEnter = legendItems.enter()
+      .append('g')
+      .attr('class', 'legend-item');
 
-    bars.exit().remove();
+    legendEnter.append('rect')
+      .attr('width', 12)
+      .attr('height', 12)
+      .attr('rx', 3);
+
+    legendEnter.append('text')
+      .attr('x', 18)
+      .attr('y', 10)
+      .attr('font-size', 11)
+      .attr('fill', '#374151');
+
+    legendEnter.merge(legendItems)
+      .attr('transform', (d, i) => `translate(0, ${i * 22})`)
+      .select('rect')
+      .attr('fill', d => colors[d.key] || '#6b7280');
+
+    legendEnter.merge(legendItems)
+      .select('text')
+      .text(d => {
+        const pct = ((d.value / total) * 100).toFixed(0);
+        return `${d.key} (${pct}%)`;
+      });
+
+    legendItems.exit().remove();
   }
 
   window.App.chartModules = window.App.chartModules || {};

@@ -10,41 +10,52 @@
     return data.map(d => `${d.bloodType}:${d.revenue.toFixed(0)}`).join('|');
   }
 
+  const colors = ['#1f4e79', '#2a6f97', '#4a8ab3', '#6fa3c4', '#94bcd5', '#b23a48', '#d05661', '#6b7280'];
+
   function init(root) {
     const container = typeof root === 'string' ? document.getElementById(root) : root;
     if (!container) return;
     
-    // Initialize SVG structure once
     container.innerHTML = '';
-    const margin = { top: 20, right: 80, bottom: 20, left: 60 };
     
     const svg = d3.select(container)
       .append('svg')
-      .attr('class', 'blood-chart-svg');
+      .attr('class', 'blood-chart-svg')
+      .attr('width', '100%')
+      .attr('height', '100%');
     
-    svg.append('g').attr('class', 'bars-group');
-    svg.append('g').attr('class', 'labels-group');
-    svg.append('g').attr('class', 'y-axis');
-    svg.append('g').attr('class', 'x-axis');
+    svg.append('g').attr('class', 'plot');
+    svg.append('g').attr('class', 'legend');
     
-    chartState = { svg, margin, container };
+    svg.append('text')
+      .attr('class', 'title')
+      .attr('x', 10)
+      .attr('y', 16)
+      .attr('font-size', 12)
+      .attr('font-weight', 600)
+      .text('Revenue by Blood Type');
+    
+    chartState = { svg, container };
     lastDataHash = null;
   }
 
   function update(rows) {
     if (!chartState) return;
     
-    const { svg, margin, container } = chartState;
+    const { svg, container } = chartState;
     if (!svg || !container) return;
 
     const filteredRows = rows || window.App.state.filtered || [];
     if (!filteredRows.length) {
-      svg.selectAll('.bars-group *').remove();
-      svg.selectAll('.labels-group *').remove();
+      svg.select('.plot').selectAll('*').remove();
+      svg.select('.legend').selectAll('*').remove();
       return;
     }
 
-    // Calculate total billing amount per blood type (optimized)
+    const { tooltip } = window.App.utils;
+    const fmt = window.App.utils?.format?.formatMoney;
+
+    // Calculate total billing amount per blood type
     const blood_stats = new Map();
     for (let i = 0; i < filteredRows.length; i++) {
       const row = filteredRows[i];
@@ -56,94 +67,137 @@
       .map(([bloodType, revenue]) => ({ bloodType, revenue }))
       .sort((a, b) => b.revenue - a.revenue);
 
-    // Check if data changed (skip redraw if same)
+    // Check if data changed
     const currentHash = hashData(data);
     if (currentHash === lastDataHash) return;
     lastDataHash = currentHash;
 
-    const containerWidth = container.offsetWidth || 680;
-    const width = containerWidth - margin.left - margin.right;
-    const height = Math.max(200, data.length * 35);
+    const w = container.offsetWidth || 400;
+    const h = container.offsetHeight || 320;
 
-    svg
-      .attr('width', containerWidth)
-      .attr('height', height + margin.top + margin.bottom);
+    svg.attr('viewBox', `0 0 ${w} ${h}`);
 
-    const xScale = d3.scaleLinear()
-      .domain([0, d3.max(data, d => d.revenue) * 1.1])
-      .range([0, width]);
+    const total = d3.sum(data, d => d.revenue) || 1;
 
-    const yScale = d3.scaleBand()
-      .domain(data.map(d => d.bloodType))
-      .range([0, height])
-      .padding(0.3);
+    // Donut chart dimensions
+    const radius = Math.min(w - 140, h - 40) / 2 - 10;
+    const innerRadius = radius * 0.55;
+    const centerX = (w - 120) / 2;
+    const centerY = (h + 20) / 2;
 
-    const colors = ['#1f4e79', '#2a6f97', '#4a8ab3', '#6fa3c4', '#94bcd5', '#b23a48', '#d05661', '#6b7280'];
-    const fmt = window.App.utils?.format?.formatMoney;
+    const pie = d3.pie()
+      .value(d => d.revenue)
+      .sort(null)
+      .padAngle(0.02);
 
-    // Update bars with transition
-    const barsGroup = svg.select('.bars-group')
-      .attr('transform', `translate(${margin.left},${margin.top})`);
+    const arc = d3.arc()
+      .innerRadius(innerRadius)
+      .outerRadius(radius)
+      .cornerRadius(3);
 
-    const bars = barsGroup.selectAll('.bar')
-      .data(data, d => d.bloodType);
+    const arcHover = d3.arc()
+      .innerRadius(innerRadius)
+      .outerRadius(radius + 6)
+      .cornerRadius(3);
 
-    bars.exit()
-      .transition().duration(200)
-      .attr('width', 0)
-      .remove();
+    const plotG = svg.select('.plot')
+      .attr('transform', `translate(${centerX},${centerY})`);
 
-    bars.enter()
-      .append('rect')
-      .attr('class', 'bar')
-      .attr('x', 0)
-      .attr('y', d => yScale(d.bloodType))
-      .attr('height', yScale.bandwidth())
+    const arcs = pie(data);
+
+    // Bind data
+    const paths = plotG.selectAll('path.slice')
+      .data(arcs, d => d.data.bloodType);
+
+    // Enter
+    paths.enter()
+      .append('path')
+      .attr('class', 'slice')
       .attr('fill', (d, i) => colors[i % colors.length])
-      .attr('width', 0)
-      .merge(bars)
-      .transition().duration(300)
-      .attr('y', d => yScale(d.bloodType))
-      .attr('width', d => xScale(d.revenue))
-      .attr('height', yScale.bandwidth());
+      .attr('stroke', '#fff')
+      .attr('stroke-width', 2)
+      .style('cursor', 'pointer')
+      .each(function(d) { this._current = d; })
+      .on('mouseenter', function(event, d) {
+        d3.select(this)
+          .transition().duration(150)
+          .attr('d', arcHover);
+      })
+      .on('mousemove', (event, d) => {
+        const pct = ((d.data.revenue / total) * 100).toFixed(1);
+        const revStr = fmt ? fmt(d.data.revenue) : `$${d.data.revenue.toLocaleString()}`;
+        tooltip.show(
+          `<div style="font-weight:600;">${d.data.bloodType}</div>` +
+          `<div>${revStr} (${pct}%)</div>`,
+          event.clientX, event.clientY
+        );
+      })
+      .on('mouseleave', function() {
+        d3.select(this)
+          .transition().duration(150)
+          .attr('d', arc);
+        tooltip.hide();
+      })
+      .merge(paths)
+      .transition()
+      .duration(400)
+      .attrTween('d', function(d) {
+        const interp = d3.interpolate(this._current, d);
+        this._current = interp(1);
+        return t => arc(interp(t));
+      });
 
-    // Update labels with transition
-    const labelsGroup = svg.select('.labels-group')
-      .attr('transform', `translate(${margin.left},${margin.top})`);
+    paths.exit().remove();
 
-    const labels = labelsGroup.selectAll('.label')
-      .data(data, d => d.bloodType);
+    // Center label showing total
+    let centerText = plotG.select('text.center-label');
+    if (centerText.empty()) {
+      centerText = plotG.append('text')
+        .attr('class', 'center-label')
+        .attr('text-anchor', 'middle')
+        .attr('dy', '0.35em')
+        .attr('font-size', 13)
+        .attr('font-weight', 600)
+        .attr('fill', '#374151');
+    }
+    const totalStr = fmt ? fmt(total) : `$${(total/1000000).toFixed(1)}M`;
+    centerText.text(totalStr);
 
-    labels.exit().remove();
+    // Legend on the right
+    const legend = svg.select('.legend')
+      .attr('transform', `translate(${w - 115}, ${35})`);
+    
+    const legendItems = legend.selectAll('g.legend-item')
+      .data(data.slice(0, 8), d => d.bloodType);
 
-    labels.enter()
-      .append('text')
-      .attr('class', 'label')
-      .attr('dy', '0.35em')
-      .attr('font-size', '12px')
-      .attr('fill', '#374151')
-      .attr('font-family', 'Poppins, sans-serif')
-      .attr('font-weight', '500')
-      .merge(labels)
-      .transition().duration(300)
-      .attr('x', d => xScale(d.revenue) + 5)
-      .attr('y', d => yScale(d.bloodType) + yScale.bandwidth() / 2)
-      .text(d => fmt ? fmt(d.revenue) : `$${d.revenue.toLocaleString()}`);
+    const legendEnter = legendItems.enter()
+      .append('g')
+      .attr('class', 'legend-item');
 
-    // Update axes
-    svg.select('.y-axis')
-      .attr('transform', `translate(${margin.left},${margin.top})`)
-      .transition().duration(300)
-      .call(d3.axisLeft(yScale))
-      .attr('font-family', 'Poppins, sans-serif')
-      .attr('font-size', '12px');
+    legendEnter.append('rect')
+      .attr('width', 10)
+      .attr('height', 10)
+      .attr('rx', 2);
 
-    svg.select('.x-axis')
-      .attr('transform', `translate(${margin.left},${margin.top + height})`)
-      .transition().duration(300)
-      .call(d3.axisBottom(xScale).ticks(5).tickFormat(d => `$${(d / 1000000).toFixed(0)}M`))
-      .attr('font-family', 'Poppins, sans-serif')
-      .attr('font-size', '12px');
+    legendEnter.append('text')
+      .attr('x', 14)
+      .attr('y', 9)
+      .attr('font-size', 10)
+      .attr('fill', '#374151');
+
+    legendEnter.merge(legendItems)
+      .attr('transform', (d, i) => `translate(0, ${i * 18})`)
+      .select('rect')
+      .attr('fill', (d, i) => colors[i % colors.length]);
+
+    legendEnter.merge(legendItems)
+      .select('text')
+      .text(d => {
+        const pct = ((d.revenue / total) * 100).toFixed(0);
+        return `${d.bloodType} (${pct}%)`;
+      });
+
+    legendItems.exit().remove();
   }
 
   window.App.chartModules = window.App.chartModules || {};
