@@ -6,7 +6,16 @@
 
   <title>Dashboard - HealthViz</title>
   <meta name="description" content="Interactive healthcare analytics dashboard with D3.js and ArcGIS." />
-  <script>try{if(!localStorage.getItem('auth')){window.location.href='login.html';}}catch(e){}</script>
+  <script>
+    // Auth check - redirect to login if not authenticated
+    (function() {
+      var isAuth = false;
+      try { isAuth = localStorage.getItem('auth') === 'true'; } catch(e) {}
+      if (!isAuth) {
+        window.location.replace('login.html');
+      }
+    })();
+  </script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -365,24 +374,48 @@
       var loaderTextEl = document.getElementById('loader-text');
       var loaderOverlay = document.getElementById('loader-overlay');
 
-      // Change message every 500ms
+      // Change message every 600ms
       var messageInterval = setInterval(function() {
-        if(messageIndex < loaderMessages.length) {
-          loaderTextEl.textContent = loaderMessages[messageIndex];
-          messageIndex++;
-        }
-      }, 500);
+        messageIndex = (messageIndex + 1) % loaderMessages.length;
+        loaderTextEl.textContent = loaderMessages[messageIndex];
+      }, 600);
 
-      // Hide loader when page is fully loaded
-      window.addEventListener('load', function() {
+      // Hide loader function
+      function hideLoader() {
+        clearInterval(messageInterval);
+        loaderTextEl.textContent = 'Ready!';
         setTimeout(function() {
-          clearInterval(messageInterval);
           loaderOverlay.classList.add('hidden');
           setTimeout(function() {
             loaderOverlay.style.display = 'none';
           }, 500);
         }, 300);
-      });
+      }
+
+      // Wait for data to be loaded (listen to App event)
+      function waitForData() {
+        if (window.App && window.App.events) {
+          window.App.events.on('data:loaded', hideLoader);
+        } else {
+          // Retry if App not ready yet
+          setTimeout(waitForData, 100);
+        }
+      }
+
+      // Start waiting for data after DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', waitForData);
+      } else {
+        waitForData();
+      }
+
+      // Fallback: hide loader after 15 seconds max (in case of errors)
+      setTimeout(function() {
+        if (!loaderOverlay.classList.contains('hidden')) {
+          loaderTextEl.textContent = 'Loading complete';
+          hideLoader();
+        }
+      }, 15000);
     })();
   </script>
   <script>

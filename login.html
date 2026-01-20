@@ -38,10 +38,16 @@
     const form = document.getElementById('login-form');
     form.addEventListener('submit', function (e) {
       e.preventDefault();
-      try {
-        localStorage.setItem('auth', 'true');
-      } catch (_) {}
-      window.location.href = 'index.html';
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      
+      // For demo: accept any non-empty credentials
+      if (email && password) {
+        try {
+          localStorage.setItem('auth', 'true');
+        } catch (_) {}
+        window.location.href = 'index.html';
+      }
     });
   </script>
 </body>
