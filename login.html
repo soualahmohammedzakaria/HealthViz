@@ -35,20 +35,25 @@
 
   <script>
     // Simple demo auth: anything passes
-    const form = document.getElementById('login-form');
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      
-      // For demo: accept any non-empty credentials
-      if (email && password) {
-        try {
-          localStorage.setItem('auth', 'true');
-        } catch (_) {}
-        window.location.href = 'index.html';
-      }
-    });
+    // Using var for maximum browser compatibility
+    (function() {
+      var form = document.getElementById('login-form');
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var email = document.getElementById('email').value;
+        var password = document.getElementById('password').value;
+        
+        // For demo: accept any non-empty credentials
+        if (email && password) {
+          try {
+            localStorage.setItem('auth', 'true');
+          } catch (err) {
+            // If localStorage fails, still try to redirect
+          }
+          window.location.href = './index.html';
+        }
+      });
+    })();
   </script>
 </body>
 </html>

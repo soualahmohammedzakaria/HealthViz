@@ -167,11 +167,11 @@
 
         // Click: select hospital and filter dashboard.
         view.on('click', async (event) => {
-          const hit = await view.hitTest(event);
-          const g = hit.results?.find(r => r.graphic && r.graphic.layer && r.graphic.layer.id === 'hospitals')?.graphic;
-          if (!g) return;
+          var hit = await view.hitTest(event);
+          var graphic = hit.results?.find(function(r) { return r.graphic && r.graphic.layer && r.graphic.layer.id === 'hospitals'; })?.graphic;
+          if (!graphic) return;
 
-          const hospital = g.attributes?.hospital;
+          var hospital = graphic.attributes?.hospital;
           if (!hospital) return;
 
           // Toggle selection.
@@ -185,27 +185,40 @@
         let lastHitGraphic = null;
         
         view.on('pointer-move', async (event) => {
-          const now = Date.now();
+          var now = Date.now();
           if (now - lastHoverTime < 150) return; // Throttle to max ~7 updates/sec
           lastHoverTime = now;
           
           if (hoverHandle) cancelAnimationFrame(hoverHandle);
           hoverHandle = requestAnimationFrame(async () => {
-            const hit = await view.hitTest(event);
-            const g = hit.results?.find(r => r.graphic && r.graphic.layer && r.graphic.layer.id === 'hospitals')?.graphic;
+            var hit = await view.hitTest(event);
+            var graphic = hit.results?.find(function(r) { return r.graphic && r.graphic.layer && r.graphic.layer.id === 'hospitals'; })?.graphic;
             
             // Skip if same graphic
-            if (g === lastHitGraphic) return;
-            lastHitGraphic = g;
+            if (graphic === lastHitGraphic) return;
+            lastHitGraphic = graphic;
             
-            if (!g) {
-              view.popup.close();
+            if (!graphic) {
+              // Use new API if available, fallback to old
+              if (typeof view.closePopup === 'function') {
+                view.closePopup();
+              } else if (view.popup && typeof view.popup.close === 'function') {
+                view.popup.close();
+              }
               return;
             }
-            view.popup.open({
-              features: [g],
-              location: g.geometry
-            });
+            // Use new API if available, fallback to old
+            if (typeof view.openPopup === 'function') {
+              view.openPopup({
+                features: [graphic],
+                location: graphic.geometry
+              });
+            } else if (view.popup && typeof view.popup.open === 'function') {
+              view.popup.open({
+                features: [graphic],
+                location: graphic.geometry
+              });
+            }
           });
         });
       });
