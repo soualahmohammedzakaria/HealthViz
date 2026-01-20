@@ -9,12 +9,13 @@ An interactive, client-side dashboard for exploring hospital and patient analyti
 - Optimized aggregations and DOM updates for responsiveness
 
 ### **Charts**
-- Average Cost per Insurance Provider
-- Total Revenue by Blood Type
-- Test Results Distribution
-- Medical Conditions vs Test Results (heatmap)
-- Patient Demographics (stacked bars)
-- Patient Flow
+- **Donut Chart**: Test Results Distribution (Normal/Abnormal/Inconclusive)
+- **Donut Chart**: Total Revenue by Blood Type
+- **Line Chart**: Average Cost per Insurance Provider (with area fill)
+- **Stacked Bar Chart**: Medical Conditions by Test Result
+- **Stacked Bar Chart**: Patient Demographics (Age × Gender)
+- **Violin Plot**: Billing Amount Distribution
+- **Sankey Diagram**: Patient Flow (Admission → Condition → Result)
 
 ### **Interactive Map**
 - ArcGIS-based hospital map with hover details
