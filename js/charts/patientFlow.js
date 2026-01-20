@@ -90,7 +90,6 @@
 
     svg.attr('viewBox', `0 0 ${w} ${h}`);
 
-    const g = svg.select('.plot');
     g.attr('transform', `translate(${margin.left},${margin.top})`);
 
     const innerW = w - margin.left - margin.right;
