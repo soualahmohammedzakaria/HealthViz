@@ -34,6 +34,14 @@
   </main>
 
   <script>
+    // Clear any existing auth when landing on login page
+    // This ensures users always go through login first
+    (function() {
+      try {
+        localStorage.removeItem('auth');
+      } catch (err) {}
+    })();
+
     // Simple demo auth: anything passes
     // Using var for maximum browser compatibility
     (function() {
