@@ -136,13 +136,17 @@
     try {
       await window.App.data.load();
     } catch (err) {
-      // On lab PCs, fetch can fail due to file permissions or live-server issues.
-      console.error(err);
+      // Log detailed error info for debugging
+      console.error('Data load failed:', err);
+      console.error('Attempted to load from:', window.App.config.dataPath);
+      
       const hint = document.getElementById('analysis-notes');
       if (hint) {
         const p = document.createElement('p');
         p.style.color = '#b23a48';
-        p.textContent = 'Failed to load CSV. If you opened index.html directly, try using a local server (Live Server) so the browser allows fetching the file.';
+        p.textContent = `Failed to load CSV from "${window.App.config.dataPath}". ` +
+          'If running locally, use a local server (Live Server). ' +
+          'If on GitHub Pages, ensure the data file is committed and the path is correct.';
         hint.prepend(p);
       }
     }

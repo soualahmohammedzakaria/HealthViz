@@ -16,10 +16,33 @@
     for (const handler of set) handler(payload);
   }
 
+  // Compute base path for GitHub Pages compatibility
+  // This handles both root deployment and subdirectory deployment (e.g., /HealthViz/)
+  function getBasePath() {
+    const scripts = document.getElementsByTagName('script');
+    for (let i = 0; i < scripts.length; i++) {
+      const src = scripts[i].src;
+      if (src && src.includes('state.js')) {
+        // Extract base path from script src (remove /js/state.js)
+        return src.replace(/js\/state\.js.*$/, '');
+      }
+    }
+    // Fallback: use current page location
+    const path = window.location.pathname;
+    const lastSlash = path.lastIndexOf('/');
+    if (lastSlash > 0) {
+      return window.location.origin + path.substring(0, lastSlash + 1);
+    }
+    return window.location.origin + '/';
+  }
+
+  const basePath = getBasePath();
+
   window.App = {
     version: '0.1',
     config: {
-      dataPath: 'data/healthcare_dataset.csv',
+      basePath: basePath,
+      dataPath: basePath + 'data/healthcare_dataset.csv',
       palette: {
         Normal: '#2a6f97',
         Abnormal: '#b23a48',
