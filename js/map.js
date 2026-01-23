@@ -26,7 +26,7 @@
           container: mapDiv,
           map,
           center: [-74, 40.7],
-          zoom: 8,
+          zoom: 6,
           constraints: { minZoom: 3 }
         });
 
@@ -220,6 +220,173 @@
               });
             }
           });
+        });
+
+        // ─────────────────────────────────────────────────────────────
+        // Overview Map (minimap) in bottom-right corner using static image
+        // ─────────────────────────────────────────────────────────────
+        const overviewContainer = document.createElement('div');
+        overviewContainer.id = 'overview-map';
+        overviewContainer.style.cssText = `
+          position: absolute;
+          bottom: 25px;
+          right: 10px;
+          width: 150px;
+          height: 100px;
+          border-radius: 4px;
+          overflow: hidden;
+          background: url('assets/map_overview.png') center center / cover no-repeat;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+          z-index: 10;
+        `;
+        mapDiv.style.position = 'relative';
+        mapDiv.appendChild(overviewContainer);
+
+        // Canvas overlay for drawing the extent rectangle
+        const overviewCanvas = document.createElement('canvas');
+        overviewCanvas.width = 150;
+        overviewCanvas.height = 100;
+        overviewCanvas.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;';
+        overviewContainer.appendChild(overviewCanvas);
+        const ctx = overviewCanvas.getContext('2d');
+
+        // USA bounds for coordinate mapping (approximate Web Mercator bounds for continental USA)
+        const usaBounds = {
+          minLon: -125,
+          maxLon: -66,
+          minLat: 24,
+          maxLat: 50
+        };
+
+        // Convert geographic coordinates to canvas pixel coordinates
+        function geoToCanvas(lon, lat) {
+          const x = ((lon - usaBounds.minLon) / (usaBounds.maxLon - usaBounds.minLon)) * overviewCanvas.width;
+          const y = ((usaBounds.maxLat - lat) / (usaBounds.maxLat - usaBounds.minLat)) * overviewCanvas.height;
+          return { x, y };
+        }
+
+        // Convert canvas pixel coordinates to geographic coordinates
+        function canvasToGeo(x, y) {
+          const lon = (x / overviewCanvas.width) * (usaBounds.maxLon - usaBounds.minLon) + usaBounds.minLon;
+          const lat = usaBounds.maxLat - (y / overviewCanvas.height) * (usaBounds.maxLat - usaBounds.minLat);
+          return { lon, lat };
+        }
+
+        // Function to update the extent rectangle on canvas
+        function updateExtentRectangle() {
+          ctx.clearRect(0, 0, overviewCanvas.width, overviewCanvas.height);
+          
+          const extent = view.extent;
+          if (!extent) return;
+
+          // Convert extent coordinates to lat/lon (from Web Mercator if needed)
+          let xmin, xmax, ymin, ymax;
+          
+          if (extent.spatialReference && extent.spatialReference.isWebMercator) {
+            // Convert from Web Mercator to WGS84
+            const toGeo = (x, y) => {
+              const lon = (x / 20037508.34) * 180;
+              let lat = (y / 20037508.34) * 180;
+              lat = (180 / Math.PI) * (2 * Math.atan(Math.exp(lat * Math.PI / 180)) - Math.PI / 2);
+              return { lon, lat };
+            };
+            const min = toGeo(extent.xmin, extent.ymin);
+            const max = toGeo(extent.xmax, extent.ymax);
+            xmin = min.lon; ymin = min.lat;
+            xmax = max.lon; ymax = max.lat;
+          } else {
+            xmin = extent.xmin; ymin = extent.ymin;
+            xmax = extent.xmax; ymax = extent.ymax;
+          }
+
+          // Convert to canvas coordinates
+          const topLeft = geoToCanvas(xmin, ymax);
+          const bottomRight = geoToCanvas(xmax, ymin);
+
+          const rectX = Math.max(0, topLeft.x);
+          const rectY = Math.max(0, topLeft.y);
+          const rectW = Math.min(overviewCanvas.width - rectX, bottomRight.x - topLeft.x);
+          const rectH = Math.min(overviewCanvas.height - rectY, bottomRight.y - topLeft.y);
+
+          // Draw the rectangle
+          ctx.fillStyle = 'rgba(59, 130, 246, 0.25)';
+          ctx.fillRect(rectX, rectY, rectW, rectH);
+          
+          ctx.strokeStyle = 'rgba(59, 130, 246, 1)';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(rectX, rectY, rectW, rectH);
+        }
+
+        // Update rectangle when main view changes
+        let isDraggingMinimap = false;
+        view.watch('extent', () => {
+          if (!isDraggingMinimap) {
+            updateExtentRectangle();
+          }
+        });
+
+        // Initial update after view is ready
+        view.when(() => {
+          updateExtentRectangle();
+        });
+
+        // ─────────────────────────────────────────────────────────────
+        // Minimap drag interaction
+        // ─────────────────────────────────────────────────────────────
+        let dragStartPos = null;
+        let dragStartCenter = null;
+
+        overviewCanvas.style.cursor = 'grab';
+
+        overviewCanvas.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          isDraggingMinimap = true;
+          dragStartPos = { x: e.offsetX, y: e.offsetY };
+          
+          // Get current center of the main view in geo coordinates
+          const center = view.center;
+          if (center.spatialReference && center.spatialReference.isWebMercator) {
+            const lon = (center.x / 20037508.34) * 180;
+            let lat = (center.y / 20037508.34) * 180;
+            lat = (180 / Math.PI) * (2 * Math.atan(Math.exp(lat * Math.PI / 180)) - Math.PI / 2);
+            dragStartCenter = { lon, lat };
+          } else {
+            dragStartCenter = { lon: center.longitude, lat: center.latitude };
+          }
+          
+          overviewCanvas.style.cursor = 'grabbing';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+          if (!isDraggingMinimap || !dragStartPos || !dragStartCenter) return;
+
+          const rect = overviewCanvas.getBoundingClientRect();
+          const currentX = e.clientX - rect.left;
+          const currentY = e.clientY - rect.top;
+
+          // Calculate delta in canvas pixels
+          const deltaX = currentX - dragStartPos.x;
+          const deltaY = currentY - dragStartPos.y;
+
+          // Convert pixel delta to geo delta
+          const lonPerPixel = (usaBounds.maxLon - usaBounds.minLon) / overviewCanvas.width;
+          const latPerPixel = (usaBounds.maxLat - usaBounds.minLat) / overviewCanvas.height;
+
+          const newLon = dragStartCenter.lon + deltaX * lonPerPixel;
+          const newLat = dragStartCenter.lat - deltaY * latPerPixel;
+
+          // Update main view center
+          view.goTo({ center: [newLon, newLat] }, { animate: false });
+          updateExtentRectangle();
+        });
+
+        document.addEventListener('mouseup', () => {
+          if (isDraggingMinimap) {
+            isDraggingMinimap = false;
+            dragStartPos = null;
+            dragStartCenter = null;
+            overviewCanvas.style.cursor = 'grab';
+          }
         });
       });
     }
