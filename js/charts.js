@@ -13,7 +13,9 @@
     'chart-demographics': 'demographics',
     'chart-sankey': 'patientFlow',
     'chart-insurance-cost': 'insuranceCost',
-    'chart-blood-revenue': 'bloodRevenue'
+    'chart-blood-revenue': 'bloodRevenue',
+    'chart-boxplot': 'boxPlot',
+    'chart-scatter': 'scatterPlot'
   };
 
   function safeInit(moduleName, rootId) {
@@ -108,6 +110,8 @@
       safeInit('patientFlow', 'chart-sankey');
       safeInit('insuranceCost', 'chart-insurance-cost');
       safeInit('bloodRevenue', 'chart-blood-revenue');
+      safeInit('boxPlot', 'chart-boxplot');
+      safeInit('scatterPlot', 'chart-scatter');
 
       window.App.events.on('data:filtered', ({ rows }) => {
         updateAllCharts(rows);

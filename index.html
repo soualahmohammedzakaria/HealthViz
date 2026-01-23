@@ -246,105 +246,191 @@
         </div>
       </div>
 
-      <div class="grid">
-        <section class="card" aria-label="Test Result Distribution">
-          <div class="card__header">
-            <h2 class="card__title">Test Results Distribution</h2>
-            <p class="card__subtitle">Overall outcome frequency</p>
+      <!-- Clinical Insights Category -->
+      <div class="chart-category">
+        <div class="chart-category__header">
+          <div class="chart-category__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+            </svg>
           </div>
-          <div class="card__body">
-            <div class="viz" id="chart-test-results"></div>
+          <div>
+            <h2 class="chart-category__title">Clinical Insights</h2>
+            <p class="chart-category__subtitle">Test results and medical condition analysis</p>
           </div>
-        </section>
-
-        <section class="card" aria-label="Conditions vs Test Results">
-          <div class="card__header">
-            <h2 class="card__title">Medical Conditions vs Test Results</h2>
-            <p class="card__subtitle">Outcome mix by condition</p>
-          </div>
-          <div class="card__body">
-            <div class="viz" id="chart-conditions"></div>
-          </div>
-        </section>
-
-        <section class="card" aria-label="Billing Amount">
-          <div class="card__header">
-            <h2 class="card__title">Billing Amount Analysis</h2>
-            <p class="card__subtitle">Cost distribution and outliers</p>
-          </div>
-          <div class="card__body">
-            <div class="viz" id="chart-billing"></div>
-          </div>
-        </section>
-
-        <section class="card" aria-label="Demographics">
-          <div class="card__header">
-            <h2 class="card__title">Patient Demographics</h2>
-            <p class="card__subtitle">Age groups split by gender</p>
-          </div>
-          <div class="card__body">
-            <div class="viz" id="chart-demographics"></div>
-          </div>
-        </section>
-
-        <section class="card card--wide" aria-label="Map">
-          <div class="card__header">
-            <h2 class="card__title">Hospital Map</h2>
-            <p class="card__subtitle">Hospitals and locations with details</p>
-          </div>
-          <div class="card__body card__body--map">
-            <div id="map" class="map"></div>
-            <div class="map-legend">
-              <span class="map-legend__title">Dominant Test Result</span>
-              <div class="map-legend__items">
-                <div class="map-legend__item">
-                  <span class="map-legend__dot" style="background:#2a6f97;"></span>
-                  <span>Normal</span>
-                </div>
-                <div class="map-legend__item">
-                  <span class="map-legend__dot" style="background:#b23a48;"></span>
-                  <span>Abnormal</span>
-                </div>
-                <div class="map-legend__item">
-                  <span class="map-legend__dot" style="background:#6b7280;"></span>
-                  <span>Inconclusive</span>
-                </div>
-              </div>
-              <span class="map-legend__hint">Circle size = patient count</span>
+        </div>
+        <div class="grid">
+          <section class="card" aria-label="Test Result Distribution">
+            <div class="card__header">
+              <h2 class="card__title">Test Results Distribution</h2>
+              <p class="card__subtitle">Overall outcome frequency</p>
             </div>
-          </div>
-        </section>
+            <div class="card__body">
+              <div class="viz" id="chart-test-results"></div>
+            </div>
+          </section>
 
-        <section class="card card--wide" aria-label="Patient Flow">
-          <div class="card__header">
-            <h2 class="card__title">Patient Flow Overview</h2>
-            <p class="card__subtitle">Admission type to test results flow</p>
-          </div>
-          <div class="card__body">
-            <div class="viz" id="chart-sankey"></div>
-          </div>
-        </section>
+          <section class="card" aria-label="Conditions vs Test Results">
+            <div class="card__header">
+              <h2 class="card__title">Medical Conditions vs Test Results</h2>
+              <p class="card__subtitle">Outcome mix by condition</p>
+            </div>
+            <div class="card__body">
+              <div class="viz" id="chart-conditions"></div>
+            </div>
+          </section>
+        </div>
+      </div>
 
-        <section class="card" aria-label="Insurance Cost">
-          <div class="card__header">
-            <h2 class="card__title">Average Cost per Insurance Provider</h2>
-            <p class="card__subtitle">Cost comparison across providers</p>
+      <!-- Financial Analysis Category -->
+      <div class="chart-category">
+        <div class="chart-category__header">
+          <div class="chart-category__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23"></line>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
           </div>
-          <div class="card__body">
-            <div class="viz" id="chart-insurance-cost"></div>
+          <div>
+            <h2 class="chart-category__title">Financial Analysis</h2>
+            <p class="chart-category__subtitle">Revenue, billing, and cost breakdowns</p>
           </div>
-        </section>
+        </div>
+        <div class="grid">
+          <section class="card" aria-label="Billing Amount">
+            <div class="card__header">
+              <h2 class="card__title">Billing Amount Analysis</h2>
+              <p class="card__subtitle">Cost distribution and outliers</p>
+            </div>
+            <div class="card__body">
+              <div class="viz" id="chart-billing"></div>
+            </div>
+          </section>
 
-        <section class="card" aria-label="Blood Type Revenue">
-          <div class="card__header">
-            <h2 class="card__title">Total Revenue by Blood Type</h2>
-            <p class="card__subtitle">Revenue distribution across blood types</p>
-          </div>
-          <div class="card__body">
-            <div class="viz" id="chart-blood-revenue"></div>
-          </div>
-        </section>
+          <section class="card" aria-label="Insurance Cost">
+            <div class="card__header">
+              <h2 class="card__title">Average Cost per Insurance Provider</h2>
+              <p class="card__subtitle">Cost comparison across providers</p>
+            </div>
+            <div class="card__body">
+              <div class="viz" id="chart-insurance-cost"></div>
+            </div>
+          </section>
 
+          <section class="card" aria-label="Blood Type Revenue">
+            <div class="card__header">
+              <h2 class="card__title">Total Revenue by Blood Type</h2>
+              <p class="card__subtitle">Revenue distribution across blood types</p>
+            </div>
+            <div class="card__body">
+              <div class="viz" id="chart-blood-revenue"></div>
+            </div>
+          </section>
+
+          <section class="card" aria-label="Scatter Plot">
+            <div class="card__header">
+              <h2 class="card__title">Age vs Billing Correlation</h2>
+              <p class="card__subtitle">Patient scatter by test result</p>
+            </div>
+            <div class="card__body">
+              <div class="viz" id="chart-scatter"></div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- Patient Demographics & Operations Category -->
+      <div class="chart-category">
+        <div class="chart-category__header">
+          <div class="chart-category__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+          </div>
+          <div>
+            <h2 class="chart-category__title">Patient Demographics & Operations</h2>
+            <p class="chart-category__subtitle">Patient profiles, flow, and operational metrics</p>
+          </div>
+        </div>
+        <div class="grid">
+          <section class="card" aria-label="Demographics">
+            <div class="card__header">
+              <h2 class="card__title">Patient Demographics</h2>
+              <p class="card__subtitle">Age groups split by gender</p>
+            </div>
+            <div class="card__body">
+              <div class="viz" id="chart-demographics"></div>
+            </div>
+          </section>
+
+          <section class="card" aria-label="Box Plot">
+            <div class="card__header">
+              <h2 class="card__title">Length of Stay Analysis</h2>
+              <p class="card__subtitle">Distribution by admission type</p>
+            </div>
+            <div class="card__body">
+              <div class="viz" id="chart-boxplot"></div>
+            </div>
+          </section>
+
+          <section class="card card--wide" aria-label="Patient Flow">
+            <div class="card__header">
+              <h2 class="card__title">Patient Flow Overview</h2>
+              <p class="card__subtitle">Admission type to test results flow</p>
+            </div>
+            <div class="card__body">
+              <div class="viz" id="chart-sankey"></div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- Geographic Overview Category -->
+      <div class="chart-category">
+        <div class="chart-category__header">
+          <div class="chart-category__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="10" r="3"></circle>
+              <path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 7 8 11.7z"></path>
+            </svg>
+          </div>
+          <div>
+            <h2 class="chart-category__title">Geographic Overview</h2>
+            <p class="chart-category__subtitle">Hospital locations and regional distribution</p>
+          </div>
+        </div>
+        <div class="grid">
+          <section class="card card--wide" aria-label="Map">
+            <div class="card__header">
+              <h2 class="card__title">Hospital Map</h2>
+              <p class="card__subtitle">Hospitals and locations with details</p>
+            </div>
+            <div class="card__body card__body--map">
+              <div id="map" class="map"></div>
+              <div class="map-legend">
+                <span class="map-legend__title">Dominant Test Result</span>
+                <div class="map-legend__items">
+                  <div class="map-legend__item">
+                    <span class="map-legend__dot" style="background:#2a6f97;"></span>
+                    <span>Normal</span>
+                  </div>
+                  <div class="map-legend__item">
+                    <span class="map-legend__dot" style="background:#b23a48;"></span>
+                    <span>Abnormal</span>
+                  </div>
+                  <div class="map-legend__item">
+                    <span class="map-legend__dot" style="background:#6b7280;"></span>
+                    <span>Inconclusive</span>
+                  </div>
+                </div>
+                <span class="map-legend__hint">Circle size = patient count</span>
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
     </section>
   </main>
@@ -385,6 +471,8 @@
   <script src="js/charts/patientFlow.js?v=3"></script>
   <script src="js/charts/insuranceCost.js?v=3"></script>
   <script src="js/charts/bloodRevenue.js?v=3"></script>
+  <script src="js/charts/boxPlot.js?v=3"></script>
+  <script src="js/charts/scatterPlot.js?v=3"></script>
   <script src="js/charts.js?v=3"></script>
   <script src="js/map.js?v=3"></script>
   <script src="js/main.js?v=3"></script>
@@ -481,7 +569,9 @@
             { keywords: ['billing', 'cost', 'amount', 'price', 'expense', 'charges', 'bill', 'insurance', 'provider'], id: 'chart-insurance-cost' },
             { keywords: ['demographics', 'age', 'gender', 'population', 'profile'], id: 'chart-demographics' },
             { keywords: ['patient flow', 'sankey', 'flow', 'admission', 'path', 'journey', 'admission type'], id: 'chart-sankey' },
-            { keywords: ['blood', 'blood type', 'revenue', 'total revenue'], id: 'chart-blood-revenue' }
+            { keywords: ['blood', 'blood type', 'revenue', 'total revenue'], id: 'chart-blood-revenue' },
+            { keywords: ['box', 'boxplot', 'length of stay', 'stay', 'los', 'quartile', 'median'], id: 'chart-boxplot' },
+            { keywords: ['scatter', 'correlation', 'age billing', 'dots', 'points'], id: 'chart-scatter' }
           ];
 
           var matchedId = null;
@@ -621,6 +711,7 @@
                   align: 'start'
                 }
               },
+              // Clinical Insights
               {
                 element: '#chart-test-results',
                 popover: {
@@ -639,38 +730,12 @@
                   align: 'start'
                 }
               },
+              // Financial Analysis
               {
                 element: '#chart-billing',
                 popover: {
                   title: 'Billing Amount Analysis',
                   description: 'Explore cost distribution and identify billing outliers. Drag to select a billing range to filter patients by cost.',
-                  side: 'top',
-                  align: 'start'
-                }
-              },
-              {
-                element: '#chart-demographics',
-                popover: {
-                  title: 'Patient Demographics',
-                  description: 'Visualize patient distribution by age groups and gender. Click bars to filter by specific demographics.',
-                  side: 'top',
-                  align: 'start'
-                }
-              },
-              {
-                element: '#map',
-                popover: {
-                  title: 'Interactive Hospital Map',
-                  description: 'Click on hospital markers to filter the entire dashboard by that specific hospital. The map shows patient distribution across locations.',
-                  side: 'top',
-                  align: 'start'
-                }
-              },
-              {
-                element: '#chart-sankey',
-                popover: {
-                  title: 'Patient Flow Overview',
-                  description: 'Track how patients flow from admission types through to test results. The width of flows represents patient volume.',
                   side: 'top',
                   align: 'start'
                 }
@@ -694,9 +759,56 @@
                 }
               },
               {
+                element: '#chart-scatter',
+                popover: {
+                  title: 'Age vs Billing Scatter Plot',
+                  description: 'Explore the relationship between patient age and billing amount. Points are colored by test result. Drag to select a region to focus on.',
+                  side: 'top',
+                  align: 'start'
+                }
+              },
+              // Patient Demographics & Operations
+              {
+                element: '#chart-demographics',
+                popover: {
+                  title: 'Patient Demographics',
+                  description: 'Visualize patient distribution by age groups and gender. Click bars to filter by specific demographics.',
+                  side: 'top',
+                  align: 'start'
+                }
+              },
+              {
+                element: '#chart-boxplot',
+                popover: {
+                  title: 'Length of Stay Box Plot',
+                  description: 'View statistical distribution of hospital stay duration by admission type. Shows median, quartiles, and outliers.',
+                  side: 'top',
+                  align: 'start'
+                }
+              },
+              {
+                element: '#chart-sankey',
+                popover: {
+                  title: 'Patient Flow Overview',
+                  description: 'Track how patients flow from admission types through to test results. The width of flows represents patient volume.',
+                  side: 'top',
+                  align: 'start'
+                }
+              },
+              // Geographic Overview
+              {
+                element: '#map',
+                popover: {
+                  title: 'Interactive Hospital Map',
+                  description: 'Click on hospital markers to filter the entire dashboard by that specific hospital. The map shows patient distribution across locations.',
+                  side: 'top',
+                  align: 'start'
+                }
+              },
+              {
                 popover: {
                   title: 'You\'re All Set! 🎉',
-                  description: 'Explore the charts below, apply filters, and discover insights in your healthcare data. You can restart this tour anytime from the settings.',
+                  description: 'Explore the charts below, apply filters, and discover insights in your healthcare data.',
                   side: 'bottom',
                   align: 'start'
                 }

@@ -360,6 +360,51 @@ button, input, select, textarea{ font-family: inherit; }
 .btn--secondary:hover{ background: rgba(31, 78, 121, 0.05); }
 
 .dashboard{ min-width: 0; }
+
+/* Chart Category Sections */
+.chart-category{
+  margin-bottom: 32px;
+}
+
+.chart-category__header{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--border);
+}
+
+.chart-category__icon{
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.chart-category__icon svg{
+  width: 18px;
+  height: 18px;
+}
+
+.chart-category__title{
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.chart-category__subtitle{
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
 .grid{
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -454,6 +499,13 @@ button, input, select, textarea{ font-family: inherit; }
   max-width: 100%;
   height: 320px;
 }
+
+.viz--wide{
+  width: 100%;
+  max-width: 100%;
+  height: 360px;
+}
+
 .card__body{ display: flex; justify-content: center; }
 .card__body--map{ display: block; }
 
@@ -465,6 +517,26 @@ button, input, select, textarea{ font-family: inherit; }
 .heatmap-cell:hover{ filter: brightness(1.03); }
 
 .sankey-link{ transition: stroke 120ms ease, stroke-width 120ms ease; }
+
+/* Parallel Coordinates */
+.parallel-line{ transition: stroke-opacity 120ms ease, stroke-width 120ms ease; }
+
+/* Box Plot */
+.box-group rect.box{ transition: opacity 120ms ease; }
+.box-group rect.box:hover{ opacity: 1 !important; }
+
+/* Scatter Plot */
+.point{ transition: r 120ms ease, opacity 120ms ease; }
+.point:hover{ r: 7px !important; opacity: 1 !important; }
+
+/* Histogram */
+.bar{ transition: fill 120ms ease; }
+
+/* Treemap */
+.leaf{ transition: opacity 120ms ease; }
+
+/* Radar Chart */
+#chart-radar path{ transition: fill-opacity 120ms ease, stroke-opacity 120ms ease; }
 
 .map{
   width: 100%;

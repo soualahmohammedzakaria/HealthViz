@@ -87,7 +87,7 @@
       .attr('y', 16)
       .attr('font-size', 12)
       .attr('font-weight', 600)
-      .text('Billing Amount (Violin Plot)');
+      .text('Billing Amount');
 
     svg.append('text')
       .attr('class', 'x-label')
