@@ -159,8 +159,7 @@
       .on('mousemove', (event, d) => {
         const billing = fmt ? fmt(d.billingAmount) : `$${d.billingAmount.toLocaleString()}`;
         tooltip.show(
-          `<div style="font-weight:600;">${d.name || 'Patient'}</div>
-          <div>Age: ${d.age} years</div>
+          `<div>Age: ${d.age} years</div>
           <div>Billing: ${billing}</div>
           <div>Condition: ${d.medicalCondition || 'N/A'}</div>
           <div>Test Result: ${d.testResult || 'N/A'}</div>`,
