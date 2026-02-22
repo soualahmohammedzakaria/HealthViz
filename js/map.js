@@ -16,17 +16,26 @@
         'esri/Map',
         'esri/views/MapView',
         'esri/layers/GraphicsLayer',
-        'esri/Graphic'
-      ], (Map, MapView, GraphicsLayer, Graphic) => {
+        'esri/Graphic',
+        'esri/geometry/Extent'
+      ], (Map, MapView, GraphicsLayer, Graphic, Extent) => {
         const map = new Map({ basemap: 'gray-vector' });
         const layer = new GraphicsLayer({ id: 'hospitals' });
         map.add(layer);
 
+        // Initial extent matching the minimap bounds
+        const usaExtent = new Extent({
+          xmin: -125,
+          ymin: 24,
+          xmax: -66,
+          ymax: 50,
+          spatialReference: { wkid: 4326 }
+        });
+
         const view = new MapView({
           container: mapDiv,
           map,
-          center: [-74, 40.7],
-          zoom: 6,
+          extent: usaExtent,
           constraints: { minZoom: 3 }
         });
 
@@ -231,11 +240,11 @@
           position: absolute;
           bottom: 25px;
           right: 10px;
-          width: 150px;
+          width: 179px;
           height: 100px;
           border-radius: 4px;
           overflow: hidden;
-          background: url('assets/map_overview.png') center center / cover no-repeat;
+          background: url('assets/map_overview.png?v=2') center center / cover no-repeat;
           box-shadow: 0 2px 6px rgba(0,0,0,0.2);
           z-index: 10;
         `;
@@ -244,7 +253,7 @@
 
         // Canvas overlay for drawing the extent rectangle
         const overviewCanvas = document.createElement('canvas');
-        overviewCanvas.width = 150;
+        overviewCanvas.width = 179;
         overviewCanvas.height = 100;
         overviewCanvas.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;';
         overviewContainer.appendChild(overviewCanvas);

@@ -142,7 +142,7 @@
         </div>
 
         <div class="form-row">
-          <label for="filter-len-max">Max. length of stay (days)</label>
+          <label for="filter-len-max">Max length of stay (days)</label>
           <input id="filter-len-max" type="number" min="0" step="1" placeholder="e.g. 14" />
         </div>
 
@@ -457,25 +457,25 @@
   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.js.iife.js"></script>
 
   <!-- App code (order matters; keep it simple for now) -->
-  <!-- Cache busting: v=3 -->
-  <script src="js/state.js?v=3"></script>
-  <script src="js/utils/format.js?v=3"></script>
-  <script src="js/utils/tooltip.js?v=3"></script>
-  <script src="js/utils/stats.js?v=3"></script>
-  <script src="js/utils/geo.js?v=3"></script>
-  <script src="js/data.js?v=3"></script>
-  <script src="js/charts/testResults.js?v=3"></script>
-  <script src="js/charts/conditions.js?v=3"></script>
-  <script src="js/charts/billing.js?v=3"></script>
-  <script src="js/charts/demographics.js?v=3"></script>
-  <script src="js/charts/patientFlow.js?v=3"></script>
-  <script src="js/charts/insuranceCost.js?v=3"></script>
-  <script src="js/charts/bloodRevenue.js?v=3"></script>
-  <script src="js/charts/boxPlot.js?v=3"></script>
-  <script src="js/charts/scatterPlot.js?v=3"></script>
-  <script src="js/charts.js?v=3"></script>
-  <script src="js/map.js?v=3"></script>
-  <script src="js/main.js?v=3"></script>
+  <!-- Cache busting: v=7 -->
+  <script src="js/state.js?v=7"></script>
+  <script src="js/utils/format.js?v=7"></script>
+  <script src="js/utils/tooltip.js?v=7"></script>
+  <script src="js/utils/stats.js?v=7"></script>
+  <script src="js/utils/geo.js?v=7"></script>
+  <script src="js/data.js?v=7"></script>
+  <script src="js/charts/testResults.js?v=7"></script>
+  <script src="js/charts/conditions.js?v=7"></script>
+  <script src="js/charts/billing.js?v=7"></script>
+  <script src="js/charts/demographics.js?v=7"></script>
+  <script src="js/charts/patientFlow.js?v=7"></script>
+  <script src="js/charts/insuranceCost.js?v=7"></script>
+  <script src="js/charts/bloodRevenue.js?v=7"></script>
+  <script src="js/charts/boxPlot.js?v=7"></script>
+  <script src="js/charts/scatterPlot.js?v=7"></script>
+  <script src="js/charts.js?v=7"></script>
+  <script src="js/map.js?v=7"></script>
+  <script src="js/main.js?v=7"></script>
   <script>
     // Initialize loader with messages
     (function() {
@@ -667,10 +667,10 @@
                 }
               },
               {
-                element: '.kpi-grid',
+                element: '#search-input',
                 popover: {
-                  title: 'Key Performance Indicators',
-                  description: 'Get a quick overview of total patients, revenue, average billing, length of stay, and number of hospitals in your filtered data.',
+                  title: 'Quick Search',
+                  description: 'Type keywords like "blood", "demo", "billing" and press Enter to quickly jump to specific charts.',
                   side: 'bottom',
                   align: 'start'
                 }
@@ -680,15 +680,6 @@
                 popover: {
                   title: 'Filter Toggle',
                   description: 'Click this icon to show or hide the filter panel. Use filters to narrow down your data by age, gender, admission type, and more.',
-                  side: 'bottom',
-                  align: 'start'
-                }
-              },
-              {
-                element: '#search-input',
-                popover: {
-                  title: 'Quick Search',
-                  description: 'Type keywords like "blood", "demo", "billing" and press Enter to quickly jump to specific charts.',
                   side: 'bottom',
                   align: 'start'
                 }
@@ -712,6 +703,15 @@
                 }
               },
               // Clinical Insights
+              {
+                element: '.kpi-grid',
+                popover: {
+                  title: 'Key Performance Indicators',
+                  description: 'Get a quick overview of total patients, revenue, average billing, length of stay, and number of hospitals in your filtered data.',
+                  side: 'bottom',
+                  align: 'start'
+                }
+              },
               {
                 element: '#chart-test-results',
                 popover: {

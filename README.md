@@ -18,7 +18,9 @@ An interactive, client-side dashboard for exploring hospital and patient analyti
 - **Sankey Diagram**: Patient Flow (Admission → Condition → Result)
 
 ### **Interactive Map**
-- ArcGIS-based hospital map with hover details
+- ArcGIS-based hospital map with hover details and click-to-filter
+- Hospitals are deterministically mapped to real US city coordinates so markers stay on land while preserving synthetic hospital names
+- Initial view and the bottom-right minimap share the same continental US bounds so the first zoom level matches the minimap
 - Debounced/throttled interactions to keep the UI smooth
 
 ### **Performance**
@@ -28,6 +30,7 @@ An interactive, client-side dashboard for exploring hospital and patient analyti
 
 ### **Guided Tutorial**
 - Optional driver.js onboarding with a short delay
+- Step-by-step tour covering search, filters, KPIs (just before Test Results Distribution), and the main clinical/financial charts
 
 ## Screenshots
 
@@ -37,6 +40,8 @@ An interactive, client-side dashboard for exploring hospital and patient analyti
 ![Charts and Filters](.githubutils/dashboard2.png)
 
 ![Detailed Views](.githubutils/dashboard3.png)
+
+![Hospital Map](.githubutils/dashboard4.png)
 
 **Search & Filtering**
 ![Search & Filtering](.githubutils/search_filter.png)
@@ -86,9 +91,6 @@ HealthViz/
 
 ## Getting Started
 
-### Prerequisites
-- Node.js (recommended) for serving files locally
-
 ### Run Locally
 
 Use any static file server. Options:
@@ -126,21 +128,12 @@ You can replace the CSV with your own dataset (matching expected column names su
 - Use the filters in the UI to focus on hospitals, conditions, and results
 - Hover on bars and map features for tooltips
 - Charts update lazily when they become visible for performance
-- Start the tutorial from the help menu (or on first load)
-
-## Development Notes
-
-- Charts are coordinated via [js/charts.js](js/charts.js) and individual chart modules under [js/charts](js/charts)
-- Data filtering/caching lives in [js/data.js](js/data.js)
-- Map logic and throttling are in [js/map.js](js/map.js)
-- Utility helpers are under [js/utils](js/utils)
-
-## Troubleshooting
-
-- Blank page or missing data: ensure you are serving over HTTP; opening the HTML via `file://` can break module imports and CSV loading.
-- `npx serve` fails: try `npm install -g serve` and run `serve -l 3000`, or use `npx http-server -p 3000`, or Live Server in VS Code.
-- Slow updates: large datasets may benefit from reducing visible charts; lazy loading helps automatically.
+- Start the tutorial on first load
 
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+## Acknowledgements
+
+This project was done as part of an academic assignment for the information visualization course (InfoVis) at Higher National School of Computer Science (ESI Algiers), taught by Mrs. Fadloun Samiha. The dataset is synthetic and generated for educational purposes, inspired by real healthcare analytics scenarios. The design and implementation were guided by best practices in interactive dashboard development and performance optimization.
